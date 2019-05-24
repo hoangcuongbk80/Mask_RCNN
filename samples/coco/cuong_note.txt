@@ -1,0 +1,13 @@
+#To train:
+python3 coco.py train --dataset=/home/aass/Hoang-Cuong/datasets/coco/ --model=coco
+
+
+#To run inference mode:
+# For single image, it will show instance image aand save to /sample/coo folder
+
+python3 coco_inference.py inference --model=/home/aass/Hoang-Cuong/Mask_RCNN/logs/coco20190208T1403/mask_rcnn_coco_0030.h5 --image=rgbd_dataset_freiburg1_xyz-rgb.png
+
+# For multi images, it will load all images under path/rgb provided and the results are saved to that folder path/instance_labels
+
+python3 coco_inference.py inference --model=/home/aass/Hoang-Cuong/Mask_RCNN/logs/coco20190208T1403/mask_rcnn_coco_0030.h5 --video=/home/aass/Hoang-Cuong/datasets/TUM/rgbd_dataset_freiburg1_desk/
+

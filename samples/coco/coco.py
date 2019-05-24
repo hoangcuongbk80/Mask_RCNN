@@ -1,28 +1,20 @@
 """
 Mask R-CNN
 Configurations and data loading code for MS COCO.
-
 Copyright (c) 2017 Matterport, Inc.
 Licensed under the MIT License (see LICENSE for details)
 Written by Waleed Abdulla
-
 ------------------------------------------------------------
-
 Usage: import the module (see Jupyter notebooks for examples), or run from
        the command line as such:
-
     # Train a new model starting from pre-trained COCO weights
     python3 coco.py train --dataset=/path/to/coco/ --model=coco
-
     # Train a new model starting from ImageNet weights. Also auto download COCO dataset
     python3 coco.py train --dataset=/path/to/coco/ --model=imagenet --download=True
-
     # Continue training a model that you had trained earlier
     python3 coco.py train --dataset=/path/to/coco/ --model=/path/to/weights.h5
-
     # Continue training the last model you trained
     python3 coco.py train --dataset=/path/to/coco/ --model=last
-
     # Run COCO evaluatoin on the last model you trained
     python3 coco.py evaluate --dataset=/path/to/coco/ --model=last
 """
@@ -78,7 +70,7 @@ class CocoConfig(Config):
 
     # We use a GPU with 12GB memory, which can fit two images.
     # Adjust down if you use a smaller GPU.
-    IMAGES_PER_GPU = 2
+    IMAGES_PER_GPU = 1
 
     # Uncomment to train on 8 GPUs (default is 1)
     # GPU_COUNT = 8
@@ -219,11 +211,9 @@ class CocoDataset(utils.Dataset):
 
     def load_mask(self, image_id):
         """Load instance masks for the given image.
-
         Different datasets use different ways to store masks. This
         function converts the different mask format to one format
         in the form of a bitmap [height, width, instances].
-
         Returns:
         masks: A bool array of shape [height, width, instance count] with
             one mask per instance.
@@ -499,12 +489,12 @@ if __name__ == '__main__':
         print("Training network heads")
         model.train(dataset_train, dataset_val,
                     learning_rate=config.LEARNING_RATE,
-                    epochs=40,
+                    epochs=100,
                     layers='heads',
                     augmentation=augmentation)
 
-        # Training - Stage 2
-        # Finetune layers from ResNet stage 4 and up
+        #Training - Stage 2
+        #Finetune layers from ResNet stage 4 and up
         print("Fine tune Resnet stage 4 and up")
         model.train(dataset_train, dataset_val,
                     learning_rate=config.LEARNING_RATE,
@@ -520,7 +510,6 @@ if __name__ == '__main__':
                     epochs=160,
                     layers='all',
                     augmentation=augmentation)
-
     elif args.command == "evaluate":
         # Validation dataset
         dataset_val = CocoDataset()
