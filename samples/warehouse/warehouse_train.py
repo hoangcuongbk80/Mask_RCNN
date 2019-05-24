@@ -11,20 +11,7 @@ Written by Waleed Abdulla
 Usage: import the module (see Jupyter notebooks for examples), or run from
        the command line as such:
 
-    # Train a new model starting from pre-trained COCO weights
-    python3 Warehouse.py train --dataset=/path/to/Warehouse/dataset --weights=coco
-
-    # Resume training a model that you had trained earlier
-    python3 Warehouse.py train --dataset=/path/to/Warehouse/dataset --weights=last
-
-    # Train a new model starting from ImageNet weights
-    python3 Warehouse.py train --dataset=/path/to/Warehouse/dataset --weights=imagenet
-
-    # Apply color splash to an image
-    python3 Warehouse.py splash --weights=/path/to/weights/file.h5 --image=<URL or path to file>
-
-    # Apply color splash to video using the last weights you trained
-    python3 Warehouse.py splash --weights=last --video=<URL or path to file>
+	python3 warehouse_train.py --dataset=/media/aass/783de628-b7ff-4217-8c96-7f3764de70d9/Warehouse_Dataset/data --weights=coco
 """
 
 import os
