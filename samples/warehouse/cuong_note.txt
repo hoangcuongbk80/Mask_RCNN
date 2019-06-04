@@ -8,6 +8,7 @@ Note that it will find data in /train and /val folder of dir provided
 # For single image, it will show instance image aand save to /sample/coo folder
 
 python3 warehouse_inference.py --weights=/home/aass/Hoang-Cuong/Mask_RCNN/logs/warehouse20190524T1156/mask_rcnn_warehouse_0060.h5 --image=1.png
+python3 warehouse_inference.py --weights=/home/hoang/DL_weights/Mask_RCNN/warehouse20190527T1603/mask_rcnn_warehouse_0060.h5 --image=/home/hoang/OSS/Mask_RCNN/samples/warehouse/2.png
 
 
 # For multi images, it will load all images under path/rgb provided and the results are saved to that folder path/instance_labels

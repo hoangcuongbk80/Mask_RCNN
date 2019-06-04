@@ -4,7 +4,6 @@ Usage:
     python3 balloon_inference.py --weights=/home/aass/Hoang-Cuong/Mask_RCNN/logs/balloon20190515T1505/mask_rcnn_balloon_0003.h5 
     --image=/home/aass/Hoang-Cuong/Mask_RCNN/samples/balloon/1.jpg
 """
-
 import os
 import sys
 import json
