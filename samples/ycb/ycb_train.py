@@ -11,12 +11,7 @@ Written by Waleed Abdulla
 Usage: import the module (see Jupyter notebooks for examples), or run from
        the command line as such:
 
-    # Train a new model starting from pre-trained COCO weights
-     python3 ycb_train.py --dataset=/home/aass/Hoang-Cuong/datasets/YCB-Video/YCB-train-val/ --weights=coco
-
-    # Resume training a model that you had trained earlier
-     python3 ycb_train.py --dataset=/home/aass/Hoang-Cuong/datasets/YCB-Video/YCB-train-val/ --weights=last
-
+	python3 python3 ycb_train.py --dataset=/media/aass/783de628-b7ff-4217-8c96-7f3764de70d9/RGBD_DATASETS/YCB_Video_Dataset/data --weights=coco
 """
 
 import os
@@ -48,6 +43,7 @@ DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "logs")
 #  Configurations
 ############################################################
 
+
 class YCBConfig(Config):
     """Configuration for training on the toy  dataset.
     Derives from the base Config class and overrides some values.
@@ -58,13 +54,12 @@ class YCBConfig(Config):
     # We use a GPU with 12GB memory, which can fit two images.
     # Adjust down if you use a smaller GPU.
     IMAGES_PER_GPU = 1
-    
+
     # Number of classes (including background)
     NUM_CLASSES = 1 + 21  # Background + objects
 
     # Number of training steps per epoch
-    STEPS_PER_EPOCH = 1000
-    #STEPS_PER_EPOCH = 10
+    STEPS_PER_EPOCH = 100
 
     # Skip detections with < 90% confidence
     DETECTION_MIN_CONFIDENCE = 0.9
@@ -104,12 +99,12 @@ class YCBDataset(utils.Dataset):
         self.add_class("YCB", 20, "052_extra_large_clamp")
         self.add_class("YCB", 21, "061_foam_brick")
 
-
         # Train or validation dataset?
         assert subset in ["train", "val"]
-        dataset_dir = os.path.join(dataset_dir, subset)
+        dataset_path = os.path.join(dataset_dir, 'via_region_data_train.json')
+        dataset_path = os.path.join(dataset_dir, 'via_region_data_val.json')
 
-        annotations = json.load(open(os.path.join(dataset_dir, "via_region_data.json")))
+        annotations = json.load(open(dataset_path))
         annotations = list(annotations.values())  # don't need the dict keys
 
         # The VIA tool saves images in the JSON even if they don't have any
@@ -118,11 +113,16 @@ class YCBDataset(utils.Dataset):
 
         # Add images
         for a in annotations:
+            # Get the x, y coordinaets of points of the polygons that make up
+            # the outline of each object instance. These are stores in the
+            # shape_attributes (see json format above)
+            # The if condition is needed to support VIA versions 1.x and 2.x.
             if type(a['regions']) is dict:
                 polygons = [r['shape_attributes'] for r in a['regions'].values()]
             else:
                 polygons = [r['shape_attributes'] for r in a['regions']] 
 
+            # the image. This is only managable since the dataset is tiny.
             image_path = os.path.join(dataset_dir, a['filename'])
             image = skimage.io.imread(image_path)
             height, width = image.shape[:2]
@@ -152,7 +152,6 @@ class YCBDataset(utils.Dataset):
         mask = np.zeros([info["height"], info["width"], len(info["polygons"])],
                         dtype=np.uint8)
         class_IDs = np.zeros([len(info["polygons"])], dtype=np.int32)
-
         for i, p in enumerate(info["polygons"]):
             # Get indexes of pixels inside the polygon and set them to 1
             rr, cc = skimage.draw.polygon(p['all_points_y'], p['all_points_x'])
@@ -183,12 +182,33 @@ def train(model):
     dataset_val.load_YCB(args.dataset, "val")
     dataset_val.prepare()
 
-    print("Training network heads")
+    # *** This training schedule is an example. Update to your needs ***
+    # Since we're using a very small dataset, and starting from
+    # COCO trained weights, we don't need to train too long. Also,
+    # no need to train all layers, just the heads should do it.
 
+    # Training - Stage 1
+    print("Training network heads")
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
-                epochs=160,
+                epochs=100,
                 layers='heads')
+
+    #Training - Stage 2
+    #Finetune layers from ResNet stage 4 and up
+    ''' print("Fine tune Resnet stage 4 and up")
+    model.train(dataset_train, dataset_val,
+                learning_rate=config.LEARNING_RATE,
+                epochs=60,
+                layers='4+') '''
+
+    # Training - Stage 3
+    # Fine tune all layers
+    ''' print("Fine tune all layers")
+    model.train(dataset_train, dataset_val,
+                learning_rate=config.LEARNING_RATE / 10,
+                epochs=80,
+                layers='all') '''
 
 ############################################################
 #  Training
@@ -210,16 +230,11 @@ if __name__ == '__main__':
                         default=DEFAULT_LOGS_DIR,
                         metavar="/path/to/logs/",
                         help='Logs and checkpoints directory (default=logs/)')
-    parser.add_argument('--image', required=False,
-                        metavar="path or URL to image",
-                        help='Image to apply the color splash effect on')
-    parser.add_argument('--video', required=False,
-                        metavar="path or URL to video",
-                        help='Video to apply the color splash effect on')
     args = parser.parse_args()
 
+    # Validate arguments
     assert args.dataset, "Argument --dataset is required for training"
-  
+    
     print("Weights: ", args.weights)
     print("Dataset: ", args.dataset)
     print("Logs: ", args.logs)
@@ -228,8 +243,7 @@ if __name__ == '__main__':
     config = YCBConfig()
 
     # Create model
-    model = modellib.MaskRCNN(mode="training", config=config,
-                                model_dir=args.logs)
+    model = modellib.MaskRCNN(mode="training", config=config, model_dir=args.logs)
 
     # Select weights file to load
     if args.weights.lower() == "coco":
@@ -257,5 +271,5 @@ if __name__ == '__main__':
     else:
         model.load_weights(weights_path, by_name=True)
 
-    # Train
+    # Train or evaluate
     train(model)
